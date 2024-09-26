@@ -3,14 +3,16 @@ import mysql.connector # type: ignore
 
 st.write("## Enter you Details :")
 
-x = st.text_input("Enter your name")
+x = st.text_input("Enter data to insert or Enter table name to view")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    insertButton = st.button("Enter Name")
+    insertButton = st.button("Insert")
 with col2:
-    showAllButton = st.button("Show all Records")
+    showAllRecordsButton = st.button("Data")
+with col3:
+    showAllTables = st.button("Tables")
 
 conn = mysql.connector.connect(
         host = st.secrets["mysql"]["hostname"],
@@ -20,17 +22,33 @@ conn = mysql.connector.connect(
     )
 cursor = conn.cursor()
 
-showAllQuery = "select * from users;"
-insertQuery = "insert into users values(" + '"' + x + '"' + ")"
+showAllRecordsQuery = "select * from " + x + ";"
+showTables = "show tables;"
+insertQuery = "insert into users values(" + '"' + x + '"' + ");"
     
 if insertButton and x != "":
     cursor.execute(insertQuery)
     st.write(f"Data Inserted!")
-elif showAllButton:
-    cursor.execute(showAllQuery)
+elif showAllRecordsButton and x != "":
+    cursor.execute(showTables)
     result = cursor.fetchall()
-    for x in result:
-        st.write(x[0])
+    isPresent = False
+    for tableName in result:
+        if tableName[0] == x:
+            isPresent = True
+    if isPresent:
+        cursor.execute(showAllRecordsQuery)
+        result = cursor.fetchall()
+        if result != "":
+            for x in result:
+                st.write(x[0])
+    else:
+        st.write("Enter a valid table name")
+elif showAllTables:
+    cursor.execute(showTables)
+    result = cursor.fetchall()
+    for tableName in result:
+        st.write(tableName[0])
 
 conn.commit() 
 cursor.close()
